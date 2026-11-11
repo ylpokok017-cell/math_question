@@ -101,12 +101,17 @@
       object-fit: cover;
       transform: scaleX(-1);
       opacity: 0;
-      filter: saturate(0.86) brightness(0.78);
       transition: opacity 900ms var(--ease-apple);
     }
 
     .camera.is-live video {
-      opacity: 1;
+      opacity: 0.9;
+    }
+
+    .camera.is-live::before,
+    .camera.is-live::after {
+      display: none;
+      animation: none;
     }
 
     .veil {
@@ -117,13 +122,11 @@
       background:
         linear-gradient(180deg, rgba(8, 8, 10, 0.16) 0%, rgba(8, 8, 10, 0.08) 48%, rgba(8, 8, 10, 0.22) 100%),
         radial-gradient(circle at 50% 42%, transparent 30%, rgba(0, 0, 0, 0.16) 100%);
-      transition: background 500ms var(--ease-apple), backdrop-filter 500ms var(--ease-apple);
+      transition: background 500ms var(--ease-apple);
     }
 
     body.is-focused .veil {
       background: rgba(8, 8, 10, 0.24);
-      -webkit-backdrop-filter: blur(8px) saturate(0.9);
-      backdrop-filter: blur(8px) saturate(0.9);
     }
 
     .stage {
@@ -154,19 +157,15 @@
       color: var(--ink);
       text-align: left;
       cursor: pointer;
+      contain: layout paint style;
       background:
         linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 54%),
         var(--glass);
       box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.76);
-      -webkit-backdrop-filter: blur(12px) saturate(142%) brightness(1.12);
-      backdrop-filter: blur(12px) saturate(142%) brightness(1.12);
       transform-origin: center;
       transition:
         opacity 360ms var(--ease-apple),
-        transform 620ms var(--spring-apple),
-        filter 360ms var(--ease-apple),
-        background-color 360ms var(--ease-apple);
-      will-change: transform, opacity;
+        transform 620ms var(--spring-apple);
     }
 
     .question::after {
@@ -180,7 +179,6 @@
         radial-gradient(circle at 3% 96%, var(--card-wash-2, rgba(255, 173, 71, 0.12)), transparent 46%),
         linear-gradient(132deg, rgba(255, 255, 255, 0.2), transparent 45%);
       opacity: 0.96;
-      mix-blend-mode: multiply;
     }
 
     .question-text {
@@ -198,7 +196,6 @@
       font-weight: 650;
       line-height: 1.12;
       letter-spacing: -0.035em;
-      text-wrap: balance;
       text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 18px rgba(255, 255, 255, 0.16);
     }
 
@@ -209,7 +206,6 @@
       white-space: pre-line;
       overflow-wrap: anywhere;
       word-break: break-word;
-      text-wrap: balance;
     }
 
     .hand-highlight {
@@ -293,7 +289,6 @@
     .stage.is-expanded .question:not(.is-selected) {
       opacity: 0;
       transform: scale(0.965);
-      filter: blur(7px);
       pointer-events: none;
     }
 
@@ -326,8 +321,6 @@
         var(--glass-strong);
       box-shadow: 0 32px 90px rgba(0, 0, 0, 0.23), 0 6px 20px rgba(0, 0, 0, 0.1),
         inset 0 1px 0 rgba(255, 255, 255, 0.88);
-      -webkit-backdrop-filter: blur(16px) saturate(136%) brightness(1.06);
-      backdrop-filter: blur(16px) saturate(136%) brightness(1.06);
       transform: translateZ(0);
       transform-origin: top left;
       will-change: transform, opacity;
@@ -345,7 +338,6 @@
       background:
         radial-gradient(circle at 52% 48%, var(--accent-soft), transparent 63%),
         radial-gradient(circle at 28% 72%, var(--accent-soft-2), transparent 57%);
-      filter: blur(10px);
       opacity: 0.9;
       transform: rotate(-8deg) scale(0.92);
       transition: transform 900ms var(--spring-apple), opacity 650ms var(--ease-apple);
@@ -390,7 +382,6 @@
       font-weight: 650;
       line-height: 1.09;
       letter-spacing: -0.045em;
-      text-wrap: balance;
       text-shadow: 0 1px 0 rgba(255, 255, 255, 0.42), 0 0 20px rgba(255, 255, 255, 0.14);
       transition:
         font-size 700ms var(--ease-apple),
@@ -434,7 +425,6 @@
       font-weight: 730;
       line-height: 1.03;
       letter-spacing: -0.055em;
-      text-wrap: balance;
       transform: translateY(24px) scale(0.975);
       transition:
         opacity 520ms var(--ease-apple),
@@ -469,13 +459,13 @@
       transform: translateY(0) scale(1);
     }
 
-    .focus-card.answer-blank.is-answering,
-    .focus-card.answer-choice.is-answering {
+    .focus-card.focus-mode-blank.is-answering,
+    .focus-card.focus-mode-choice.is-answering {
       justify-content: center;
     }
 
-    .focus-card.answer-blank.is-answering .focus-question,
-    .focus-card.answer-choice.is-answering .focus-question {
+    .focus-card.focus-mode-blank.is-answering .focus-question,
+    .focus-card.focus-mode-choice.is-answering .focus-question {
       max-height: none;
       color: var(--ink);
       font-weight: 650;
@@ -483,10 +473,10 @@
       letter-spacing: -0.045em;
     }
 
-    .focus-card.answer-blank.is-answering .answer-rule,
-    .focus-card.answer-choice.is-answering .answer-rule,
-    .focus-card.answer-blank.is-answering .focus-answer,
-    .focus-card.answer-choice.is-answering .focus-answer {
+    .focus-card.focus-mode-blank.is-answering .answer-rule,
+    .focus-card.focus-mode-choice.is-answering .answer-rule,
+    .focus-card.focus-mode-blank.is-answering .focus-answer,
+    .focus-card.focus-mode-choice.is-answering .focus-answer {
       display: none;
     }
 
@@ -583,9 +573,9 @@
       stroke-dashoffset: 0;
     }
 
-    .answer-direct,
-    .answer-meeting,
-    .layered-answer {
+    .focus-answer > .answer-direct,
+    .focus-answer > .answer-meeting,
+    .focus-answer > .layered-answer {
       position: relative;
       display: flex;
       width: 100%;
@@ -593,11 +583,11 @@
       min-height: 0;
     }
 
-    .answer-direct {
+    .focus-answer > .answer-direct {
       align-items: center;
     }
 
-    .answer-direct::before {
+    .focus-answer > .answer-direct::before {
       content: "";
       position: absolute;
       width: 46%;
@@ -608,13 +598,12 @@
       background:
         radial-gradient(circle at 42% 35%, var(--accent-soft), transparent 68%),
         radial-gradient(circle at 72% 74%, var(--accent-soft-2), transparent 62%);
-      filter: blur(6px);
       transform: rotate(-7deg) scale(0.75);
       opacity: 0;
       transition: transform 850ms var(--spring-apple), opacity 500ms var(--ease-apple);
     }
 
-    .is-answering .answer-direct::before {
+    .is-answering .focus-answer > .answer-direct::before {
       transform: rotate(-2deg) scale(1);
       opacity: 1;
     }
@@ -657,7 +646,7 @@
       transform: rotate(-2deg) scaleX(1);
     }
 
-    .answer-meeting {
+    .focus-answer > .answer-meeting {
       flex-direction: column;
       align-items: center;
       justify-content: center;
@@ -769,7 +758,7 @@
       transform: rotate(1deg) scaleX(1);
     }
 
-    .layered-answer {
+    .focus-answer > .layered-answer {
       flex-direction: column;
       align-items: flex-start;
       justify-content: center;
@@ -901,12 +890,10 @@
       from {
         opacity: 0;
         transform: translateY(14px) scale(0.985);
-        filter: blur(4px);
       }
       to {
         opacity: 1;
         transform: translateY(0) scale(1);
-        filter: blur(0);
       }
     }
 
@@ -1261,8 +1248,9 @@
           audio: false,
           video: {
             facingMode: { ideal: "user" },
-            width: { ideal: 1920 },
-            height: { ideal: 1440 }
+            width: { ideal: 1280, max: 1920 },
+            height: { ideal: 960, max: 1440 },
+            frameRate: { ideal: 30, max: 30 }
           }
         }).then((mediaStream) => {
           stream = mediaStream;
@@ -1456,21 +1444,35 @@
         focusCard.classList.remove(
           "is-answering",
           "is-leaving",
-          "answer-blank",
-          "answer-choice",
-          "answer-direct",
-          "answer-meeting",
-          "answer-layers"
+          "focus-mode-blank",
+          "focus-mode-choice",
+          "focus-mode-direct",
+          "focus-mode-meeting",
+          "focus-mode-layers"
         );
-        focusCard.classList.add(`answer-${item.mode}`);
+        focusCard.classList.add(`focus-mode-${item.mode}`);
         applyPalette(focusCard, item);
-        focusCard.style.setProperty("--focus-left", `${bounds.left}px`);
-        focusCard.style.setProperty("--focus-top", `${bounds.top}px`);
-        focusCard.style.setProperty("--focus-width", `${bounds.width}px`);
-        focusCard.style.setProperty("--focus-height", `${bounds.height}px`);
+
+        const inset = 24;
+        const targetWidth = Math.min(window.innerWidth - inset * 2, window.innerHeight * 1.46);
+        const targetHeight = Math.min(window.innerHeight - inset * 2, targetWidth * 0.64);
+        const targetLeft = (window.innerWidth - targetWidth) / 2;
+        const targetTop = (window.innerHeight - targetHeight) / 2;
+        const scaleX = bounds.width / targetWidth;
+        const scaleY = bounds.height / targetHeight;
+
+        focusCard.style.setProperty("--focus-left", `${targetLeft}px`);
+        focusCard.style.setProperty("--focus-top", `${targetTop}px`);
+        focusCard.style.setProperty("--focus-width", `${targetWidth}px`);
+        focusCard.style.setProperty("--focus-height", `${targetHeight}px`);
         focusCard.style.removeProperty("--focus-question-size");
         focusCard.style.removeProperty("--focus-question-answered-size");
         focusCard.style.removeProperty("--answer-size");
+        focusCard.style.transition = "none";
+        focusCard.style.transformOrigin = "top left";
+        focusCard.style.transform =
+          `translate3d(${bounds.left - targetLeft}px, ${bounds.top - targetTop}px, 0) ` +
+          `scale(${scaleX}, ${scaleY})`;
         focusCard.hidden = false;
         focusCard.focus({ preventScroll: true });
         button.classList.add("is-selected");
@@ -1479,26 +1481,18 @@
 
         requestAnimationFrame(() => {
           fitFocusQuestion();
-          const insetX = Math.max(24, parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--grid-gap")) || 16);
-          const targetWidth = Math.min(window.innerWidth - insetX * 2, window.innerHeight * 1.46);
-          const targetHeight = Math.min(window.innerHeight - insetX * 2, targetWidth * 0.64);
-          const left = (window.innerWidth - targetWidth) / 2;
-          const top = (window.innerHeight - targetHeight) / 2;
+          requestAnimationFrame(() => {
+            focusCard.style.transition = "transform 720ms var(--spring-apple)";
+            focusCard.style.transform = "translate3d(0, 0, 0) scale(1, 1)";
 
-          focusCard.style.setProperty("--focus-left", `${left}px`);
-          focusCard.style.setProperty("--focus-top", `${top}px`);
-          focusCard.style.setProperty("--focus-width", `${targetWidth}px`);
-          focusCard.style.setProperty("--focus-height", `${targetHeight}px`);
-          focusCard.style.transition =
-            `left 720ms var(--spring-apple), top 720ms var(--spring-apple), ` +
-            `width 720ms var(--spring-apple), height 720ms var(--spring-apple), ` +
-            `border-radius 720ms var(--spring-apple)`;
-
-          window.setTimeout(() => {
-            focusCard.style.transition = "";
-            fitFocusQuestion();
-            transitionLocked = false;
-          }, motionDuration(740));
+            window.setTimeout(() => {
+              focusCard.style.transition = "";
+              focusCard.style.transform = "";
+              focusCard.style.transformOrigin = "";
+              fitFocusQuestion();
+              transitionLocked = false;
+            }, motionDuration(740));
+          });
         });
       }
 
