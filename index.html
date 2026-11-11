@@ -1,0 +1,1599 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1">
+  <meta name="theme-color" content="#151515">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>數學問題</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1d1d1f;
+      --muted-ink: rgba(29, 29, 31, 0.56);
+      --glass: rgba(250, 250, 252, 0.42);
+      --glass-strong: rgba(251, 251, 253, 0.7);
+      --hairline: rgba(255, 255, 255, 0.72);
+      --shadow: 0 16px 48px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.07);
+      --ease-apple: cubic-bezier(0.22, 1, 0.36, 1);
+      --spring-apple: cubic-bezier(0.16, 1, 0.3, 1);
+      --grid-gap: clamp(10px, 1.25vw, 16px);
+      --page-inset: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      overscroll-behavior: none;
+      background: #111;
+    }
+
+    body {
+      position: fixed;
+      inset: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+        "PingFang HK", "PingFang TC", "Helvetica Neue", sans-serif;
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    button {
+      font: inherit;
+    }
+
+    .camera {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(172, 215, 255, 0.58), transparent 34%),
+        radial-gradient(circle at 82% 64%, rgba(255, 228, 194, 0.46), transparent 38%),
+        linear-gradient(145deg, #a9bcc9 0%, #d6d8d2 42%, #c9c0b9 100%);
+    }
+
+    .camera::before {
+      content: "";
+      position: absolute;
+      width: 74vw;
+      height: 74vw;
+      left: -22vw;
+      top: -28vw;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0));
+      filter: blur(18px);
+      opacity: 0.8;
+      animation: ambient-drift 18s ease-in-out infinite alternate;
+    }
+
+    .camera::after {
+      content: "";
+      position: absolute;
+      width: 68vw;
+      height: 68vw;
+      right: -28vw;
+      bottom: -34vw;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 247, 231, 0.7), rgba(255, 247, 231, 0));
+      filter: blur(20px);
+      opacity: 0.72;
+      animation: ambient-drift 23s ease-in-out -7s infinite alternate-reverse;
+    }
+
+    .camera video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transform: scaleX(-1);
+      opacity: 0;
+      filter: saturate(0.86) brightness(0.78);
+      transition: opacity 900ms var(--ease-apple);
+    }
+
+    .camera.is-live video {
+      opacity: 1;
+    }
+
+    .veil {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background:
+        linear-gradient(180deg, rgba(8, 8, 10, 0.16) 0%, rgba(8, 8, 10, 0.08) 48%, rgba(8, 8, 10, 0.22) 100%),
+        radial-gradient(circle at 50% 42%, transparent 30%, rgba(0, 0, 0, 0.16) 100%);
+      transition: background 500ms var(--ease-apple), backdrop-filter 500ms var(--ease-apple);
+    }
+
+    body.is-focused .veil {
+      background: rgba(8, 8, 10, 0.24);
+      -webkit-backdrop-filter: blur(8px) saturate(0.9);
+      backdrop-filter: blur(8px) saturate(0.9);
+    }
+
+    .stage {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      padding: var(--page-inset);
+      padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right))
+        max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+      display: grid;
+      grid-template-columns: repeat(12, minmax(0, 1fr));
+      grid-template-rows: repeat(var(--rows, 1), minmax(0, 1fr));
+      gap: var(--grid-gap);
+      isolation: isolate;
+    }
+
+    .question {
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      margin: 0;
+      padding: clamp(15px, 2.2vw, 30px);
+      border: 1px solid var(--hairline);
+      border-radius: clamp(22px, 2.35vw, 32px);
+      overflow: hidden;
+      appearance: none;
+      -webkit-appearance: none;
+      color: var(--ink);
+      text-align: left;
+      cursor: pointer;
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 54%),
+        var(--glass);
+      box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.76);
+      -webkit-backdrop-filter: blur(12px) saturate(142%) brightness(1.12);
+      backdrop-filter: blur(12px) saturate(142%) brightness(1.12);
+      transform-origin: center;
+      transition:
+        opacity 360ms var(--ease-apple),
+        transform 620ms var(--spring-apple),
+        filter 360ms var(--ease-apple),
+        background-color 360ms var(--ease-apple);
+      will-change: transform, opacity;
+    }
+
+    .question::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 86% 4%, var(--card-wash, rgba(55, 132, 255, 0.16)), transparent 42%),
+        radial-gradient(circle at 3% 96%, var(--card-wash-2, rgba(255, 173, 71, 0.12)), transparent 46%),
+        linear-gradient(132deg, rgba(255, 255, 255, 0.2), transparent 45%);
+      opacity: 0.96;
+      mix-blend-mode: multiply;
+    }
+
+    .question-text {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      white-space: pre-line;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      font-size: var(--question-size, 28px);
+      font-weight: 650;
+      line-height: 1.12;
+      letter-spacing: -0.035em;
+      text-wrap: balance;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.4), 0 0 18px rgba(255, 255, 255, 0.16);
+    }
+
+    .question-copy {
+      display: block;
+      width: 100%;
+      min-width: 0;
+      white-space: pre-line;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      text-wrap: balance;
+    }
+
+    .hand-highlight {
+      position: relative;
+      z-index: 0;
+      display: inline-block;
+      padding: 0 0.06em;
+      margin: 0 -0.06em;
+      isolation: isolate;
+      white-space: nowrap;
+    }
+
+    .hand-highlight::before,
+    .hand-highlight::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      pointer-events: none;
+      transform-origin: left center;
+    }
+
+    .hand-highlight::before {
+      --mark-angle: -1.4deg;
+      --mark-skew: -5deg;
+      --mark-opacity: 0.24;
+      left: -0.16em;
+      right: -0.13em;
+      bottom: 0.055em;
+      height: 0.53em;
+      border-radius: 42% 58% 45% 55%;
+      background: linear-gradient(92deg, var(--accent), var(--accent-2));
+      opacity: var(--mark-opacity);
+      transform: rotate(var(--mark-angle)) skewX(var(--mark-skew));
+      animation: marker-sweep 720ms var(--spring-apple) both;
+    }
+
+    .hand-highlight::after {
+      --line-angle: 0.9deg;
+      --line-skew: 8deg;
+      --line-opacity: 0.82;
+      left: -0.1em;
+      right: -0.08em;
+      bottom: 0.025em;
+      height: 0.075em;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      opacity: var(--line-opacity);
+      transform: rotate(var(--line-angle)) skewX(var(--line-skew));
+      animation: marker-line-sweep 760ms 80ms var(--spring-apple) both;
+    }
+
+    .hand-highlight.highlight-b::before {
+      --mark-angle: 1.1deg;
+      --mark-skew: 4deg;
+      --mark-opacity: 0.2;
+      bottom: 0.12em;
+      height: 0.43em;
+      border-radius: 58% 42% 55% 45%;
+      background: linear-gradient(92deg, var(--accent-2), var(--accent));
+      animation-delay: 90ms;
+    }
+
+    .hand-highlight.highlight-b::after {
+      --line-angle: -0.8deg;
+      --line-skew: -7deg;
+      --line-opacity: 0.7;
+      bottom: 0.035em;
+      animation-delay: 140ms;
+    }
+
+    .question:focus-visible {
+      outline: 3px solid rgba(0, 113, 227, 0.9);
+      outline-offset: -5px;
+    }
+
+    .question.is-selected {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .stage.is-expanded .question:not(.is-selected) {
+      opacity: 0;
+      transform: scale(0.965);
+      filter: blur(7px);
+      pointer-events: none;
+    }
+
+    .stage.is-expanded .question.is-selected {
+      opacity: 0;
+    }
+
+    .focus-card {
+      position: fixed;
+      z-index: 5;
+      --accent: #1769ff;
+      --accent-2: #45dfd0;
+      --accent-soft: rgba(23, 105, 255, 0.2);
+      --accent-soft-2: rgba(69, 223, 208, 0.16);
+      left: var(--focus-left);
+      top: var(--focus-top);
+      width: var(--focus-width);
+      height: var(--focus-height);
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      justify-content: center;
+      padding: clamp(26px, 4.4vw, 66px);
+      border: 1px solid rgba(255, 255, 255, 0.82);
+      border-radius: clamp(24px, 2.8vw, 38px);
+      overflow: hidden;
+      color: var(--ink);
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0) 52%),
+        var(--glass-strong);
+      box-shadow: 0 32px 90px rgba(0, 0, 0, 0.23), 0 6px 20px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.88);
+      -webkit-backdrop-filter: blur(16px) saturate(136%) brightness(1.06);
+      backdrop-filter: blur(16px) saturate(136%) brightness(1.06);
+      transform: translateZ(0);
+      transform-origin: top left;
+      will-change: transform, opacity;
+    }
+
+    .focus-card::before {
+      content: "";
+      position: absolute;
+      width: 66%;
+      height: 92%;
+      right: -22%;
+      top: -30%;
+      border-radius: 44% 56% 62% 38%;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 52% 48%, var(--accent-soft), transparent 63%),
+        radial-gradient(circle at 28% 72%, var(--accent-soft-2), transparent 57%);
+      filter: blur(10px);
+      opacity: 0.9;
+      transform: rotate(-8deg) scale(0.92);
+      transition: transform 900ms var(--spring-apple), opacity 650ms var(--ease-apple);
+    }
+
+    .focus-card::after {
+      content: "";
+      position: absolute;
+      left: clamp(26px, 4.4vw, 66px);
+      top: 0;
+      width: clamp(88px, 13vw, 180px);
+      height: 6px;
+      border-radius: 0 0 8px 8px;
+      pointer-events: none;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform 720ms var(--spring-apple);
+    }
+
+    .focus-card.is-answering::before {
+      transform: rotate(4deg) translate3d(-3%, 5%, 0) scale(1.08);
+      opacity: 1;
+    }
+
+    .focus-card.is-answering::after {
+      transform: scaleX(1);
+    }
+
+    .focus-card[hidden] {
+      display: none;
+    }
+
+    .focus-question {
+      position: relative;
+      z-index: 1;
+      margin: 0;
+      white-space: pre-line;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      font-size: var(--focus-question-size, 48px);
+      font-weight: 650;
+      line-height: 1.09;
+      letter-spacing: -0.045em;
+      text-wrap: balance;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.42), 0 0 20px rgba(255, 255, 255, 0.14);
+      transition:
+        font-size 700ms var(--ease-apple),
+        opacity 500ms var(--ease-apple),
+        transform 700ms var(--spring-apple);
+      transform-origin: left top;
+    }
+
+    .answer-rule {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 1px;
+      margin: clamp(16px, 2.2vw, 28px) 0;
+      overflow: hidden;
+      background: rgba(29, 29, 31, 0.12);
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform 650ms var(--spring-apple);
+    }
+
+    .answer-rule::after {
+      content: "";
+      display: block;
+      width: 22%;
+      height: 2px;
+      margin-top: -0.5px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    }
+
+    .focus-answer {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      margin: 0;
+      opacity: 0;
+      white-space: pre-line;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      font-size: var(--answer-size, 62px);
+      font-weight: 730;
+      line-height: 1.03;
+      letter-spacing: -0.055em;
+      text-wrap: balance;
+      transform: translateY(24px) scale(0.975);
+      transition:
+        opacity 520ms var(--ease-apple),
+        transform 780ms var(--spring-apple);
+    }
+
+    .focus-card.is-answering {
+      justify-content: stretch;
+    }
+
+    .focus-card.is-answering .focus-question {
+      flex: 0 0 auto;
+      max-height: 29%;
+      color: var(--muted-ink);
+      font-size: var(--focus-question-answered-size, 28px);
+      font-weight: 560;
+      line-height: 1.15;
+      letter-spacing: -0.025em;
+    }
+
+    .focus-card.is-answering .answer-rule {
+      flex: 0 0 1px;
+      transform: scaleX(1);
+    }
+
+    .focus-card.is-answering .focus-answer {
+      display: flex;
+      flex: 1 1 auto;
+      align-items: center;
+      min-height: 0;
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .focus-card.answer-blank.is-answering,
+    .focus-card.answer-choice.is-answering {
+      justify-content: center;
+    }
+
+    .focus-card.answer-blank.is-answering .focus-question,
+    .focus-card.answer-choice.is-answering .focus-question {
+      max-height: none;
+      color: var(--ink);
+      font-weight: 650;
+      line-height: 1.09;
+      letter-spacing: -0.045em;
+    }
+
+    .focus-card.answer-blank.is-answering .answer-rule,
+    .focus-card.answer-choice.is-answering .answer-rule,
+    .focus-card.answer-blank.is-answering .focus-answer,
+    .focus-card.answer-choice.is-answering .focus-answer {
+      display: none;
+    }
+
+    .inline-blank {
+      position: relative;
+      display: inline-block;
+      width: var(--blank-width, 3em);
+      height: 1em;
+      margin: 0 0.08em;
+      vertical-align: -0.06em;
+    }
+
+    .inline-blank::after {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0.01em;
+      height: max(2px, 0.075em);
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent));
+      box-shadow: 0 0 14px var(--accent-soft);
+      transform: scaleX(0);
+      transform-origin: left center;
+      transition: transform 640ms var(--spring-apple);
+    }
+
+    .inline-answer {
+      position: absolute;
+      left: 50%;
+      bottom: 0.04em;
+      max-width: none;
+      color: var(--accent);
+      white-space: nowrap;
+      font-weight: 760;
+      line-height: 1;
+      opacity: 0;
+      transform: translate(-50%, 0.28em) rotate(-2deg) scale(0.82);
+      transition:
+        opacity 380ms var(--ease-apple),
+        transform 720ms var(--spring-apple);
+    }
+
+    .is-answering .inline-blank::after {
+      transform: scaleX(1);
+    }
+
+    .is-answering .inline-answer {
+      opacity: 1;
+      transform: translate(-50%, 0) rotate(-1deg) scale(1);
+    }
+
+    .choice-token {
+      position: relative;
+      display: inline-block;
+      isolation: isolate;
+    }
+
+    .choice-token.is-answer {
+      padding: 0 0.055em;
+    }
+
+    .choice-mark {
+      position: absolute;
+      z-index: 2;
+      left: -27%;
+      top: -42%;
+      width: 156%;
+      height: 190%;
+      overflow: visible;
+      pointer-events: none;
+    }
+
+    .choice-mark path {
+      fill: none;
+      stroke: var(--accent-2);
+      stroke-width: 4.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 1;
+      stroke-dashoffset: 1;
+      filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.12));
+      transition: stroke-dashoffset 820ms 100ms var(--ease-apple);
+    }
+
+    .choice-mark .choice-mark-under {
+      stroke: var(--accent);
+      stroke-width: 2.5;
+      opacity: 0.72;
+      transition-delay: 200ms;
+    }
+
+    .is-answering .choice-mark path {
+      stroke-dashoffset: 0;
+    }
+
+    .answer-direct,
+    .answer-meeting,
+    .layered-answer {
+      position: relative;
+      display: flex;
+      width: 100%;
+      height: 100%;
+      min-height: 0;
+    }
+
+    .answer-direct {
+      align-items: center;
+    }
+
+    .answer-direct::before {
+      content: "";
+      position: absolute;
+      width: 46%;
+      height: 62%;
+      left: -5%;
+      top: 17%;
+      border-radius: 46% 54% 58% 42%;
+      background:
+        radial-gradient(circle at 42% 35%, var(--accent-soft), transparent 68%),
+        radial-gradient(circle at 72% 74%, var(--accent-soft-2), transparent 62%);
+      filter: blur(6px);
+      transform: rotate(-7deg) scale(0.75);
+      opacity: 0;
+      transition: transform 850ms var(--spring-apple), opacity 500ms var(--ease-apple);
+    }
+
+    .is-answering .answer-direct::before {
+      transform: rotate(-2deg) scale(1);
+      opacity: 1;
+    }
+
+    .answer-headline {
+      position: relative;
+      z-index: 1;
+      display: inline-block;
+      color: var(--ink);
+      font-size: var(--answer-size, 88px);
+      font-weight: 760;
+      line-height: 0.98;
+      letter-spacing: -0.065em;
+      opacity: 0;
+      transform: translateY(30px) scale(0.9);
+      transition: transform 780ms var(--spring-apple), opacity 460ms var(--ease-apple);
+    }
+
+    .is-answering .answer-headline {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .answer-scribble {
+      position: absolute;
+      z-index: -1;
+      left: -3%;
+      right: -7%;
+      bottom: 0.02em;
+      height: 0.25em;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transform: rotate(-2deg) scaleX(0);
+      transform-origin: left center;
+      opacity: 0.86;
+      transition: transform 710ms 160ms var(--spring-apple);
+    }
+
+    .is-answering .answer-scribble {
+      transform: rotate(-2deg) scaleX(1);
+    }
+
+    .answer-meeting {
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(18px, 2.4vw, 34px);
+    }
+
+    .meeting-orbit {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(78px, 13vw, 178px);
+      width: min(64%, 680px);
+      height: clamp(92px, 14vw, 154px);
+    }
+
+    .meeting-orbit::before {
+      content: "";
+      position: absolute;
+      left: 8%;
+      right: 8%;
+      top: 50%;
+      height: 3px;
+      border-radius: 999px;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--accent) 0 12px,
+        transparent 12px 23px
+      );
+      opacity: 0.55;
+      transform: scaleX(0);
+      transition: transform 700ms var(--spring-apple);
+    }
+
+    .is-answering .meeting-orbit::before {
+      transform: scaleX(1);
+    }
+
+    .meeting-number {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      place-items: center;
+      width: clamp(76px, 10vw, 116px);
+      aspect-ratio: 1;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 50%;
+      color: var(--ink);
+      background: var(--glass-strong);
+      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.13);
+      font-size: clamp(26px, 3vw, 42px);
+      font-weight: 720;
+      opacity: 0;
+      transition:
+        transform 820ms var(--spring-apple),
+        opacity 480ms var(--ease-apple),
+        box-shadow 600ms var(--ease-apple);
+    }
+
+    .meeting-number:first-child {
+      transform: translateX(-58px) scale(0.72);
+      box-shadow: 0 0 0 16px var(--accent-soft), 0 14px 35px rgba(0, 0, 0, 0.13);
+    }
+
+    .meeting-number:last-child {
+      transform: translateX(58px) scale(0.72);
+      box-shadow: 0 0 0 16px var(--accent-soft-2), 0 14px 35px rgba(0, 0, 0, 0.13);
+    }
+
+    .is-answering .meeting-number {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+
+    .meeting-result {
+      position: relative;
+      z-index: 1;
+      display: inline-block;
+      color: var(--ink);
+      font-size: clamp(42px, 7vw, 88px);
+      font-weight: 760;
+      line-height: 1;
+      letter-spacing: -0.06em;
+      opacity: 0;
+      transform: translateY(22px) scale(0.93);
+      transition: transform 780ms 150ms var(--spring-apple), opacity 460ms 150ms var(--ease-apple);
+    }
+
+    .is-answering .meeting-result {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    .meeting-result::after {
+      content: "";
+      position: absolute;
+      left: -5%;
+      right: -8%;
+      bottom: -0.12em;
+      height: 0.13em;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      transform: rotate(1deg) scaleX(0);
+      transform-origin: left;
+      transition: transform 680ms 340ms var(--spring-apple);
+    }
+
+    .is-answering .meeting-result::after {
+      transform: rotate(1deg) scaleX(1);
+    }
+
+    .layered-answer {
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: clamp(16px, 2vw, 28px);
+    }
+
+    .layer-main {
+      position: relative;
+      z-index: 3;
+      color: var(--ink);
+      font-size: clamp(40px, 6vw, 76px);
+      font-weight: 780;
+      line-height: 0.94;
+      letter-spacing: -0.065em;
+      opacity: 0;
+      transform: translateY(22px);
+      transition: transform 760ms var(--spring-apple), opacity 460ms var(--ease-apple);
+    }
+
+    .is-answering .layer-main {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .reason-stack {
+      position: relative;
+      width: min(86%, 780px);
+      height: clamp(194px, 24vw, 280px);
+      margin-left: clamp(0px, 3vw, 34px);
+    }
+
+    .reason-label {
+      position: absolute;
+      z-index: 4;
+      left: clamp(34px, 5vw, 68px);
+      top: -0.55em;
+      padding: 0.24em 0.7em 0.28em;
+      border: 2px solid rgba(255, 255, 255, 0.72);
+      border-radius: 999px;
+      color: #171717;
+      background: linear-gradient(100deg, #d9ff54, #9aff8d);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+      font-size: clamp(14px, 1.35vw, 18px);
+      font-weight: 720;
+      letter-spacing: 0.03em;
+      opacity: 0;
+      transform: rotate(-5deg) scale(0.7);
+      transition: opacity 420ms 220ms var(--ease-apple), transform 760ms 220ms var(--spring-apple);
+    }
+
+    .is-answering .reason-label {
+      opacity: 1;
+      transform: rotate(-4deg) scale(1);
+    }
+
+    .reason-card {
+      position: absolute;
+      display: flex;
+      align-items: center;
+      width: 84%;
+      min-height: 58%;
+      padding: clamp(14px, 1.8vw, 24px) clamp(20px, 2.8vw, 38px);
+      border: 1px solid rgba(255, 255, 255, 0.72);
+      border-radius: clamp(20px, 2.3vw, 30px);
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.11);
+      color: #151515;
+      font-size: clamp(27px, 3.5vw, 44px);
+      font-weight: 700;
+      line-height: 1.08;
+      letter-spacing: -0.03em;
+      opacity: 0;
+      transform-origin: left bottom;
+      transition:
+        opacity 460ms var(--ease-apple),
+        transform 820ms var(--spring-apple);
+    }
+
+    .reason-one {
+      z-index: 1;
+      left: 7%;
+      top: 0;
+      align-items: flex-start;
+      padding-top: clamp(14px, 1.6vw, 20px);
+      background: linear-gradient(118deg, #ffe97a, #ffb44b 68%, #ff8e75);
+      transform: translateY(28px) rotate(5deg) scale(0.94);
+    }
+
+    .reason-two {
+      z-index: 2;
+      left: 0;
+      bottom: 0;
+      background: linear-gradient(118deg, #8ed8ff, #7797ff 62%, #b395ff);
+      transform: translateY(36px) rotate(-3.5deg) scale(0.92);
+      transition-delay: 110ms;
+    }
+
+    .is-answering .reason-one {
+      opacity: 1;
+      transform: translateY(0) rotate(3deg) scale(1);
+    }
+
+    .is-answering .reason-two {
+      opacity: 1;
+      transform: translateY(0) rotate(-2deg) scale(1);
+    }
+
+    .focus-card.is-leaving {
+      pointer-events: none;
+      opacity: 0;
+      transform: scale(0.965) translateY(10px);
+      transition: opacity 360ms var(--ease-apple), transform 520ms var(--ease-apple);
+    }
+
+    body.is-complete .veil {
+      background:
+        linear-gradient(180deg, rgba(8, 8, 10, 0.12) 0%, rgba(8, 8, 10, 0.06) 50%, rgba(8, 8, 10, 0.18) 100%);
+    }
+
+    @keyframes ambient-drift {
+      from {
+        transform: translate3d(-2%, -1%, 0) scale(0.98);
+      }
+      to {
+        transform: translate3d(5%, 4%, 0) scale(1.08);
+      }
+    }
+
+    @keyframes card-enter {
+      from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.985);
+        filter: blur(4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+        filter: blur(0);
+      }
+    }
+
+    @keyframes marker-sweep {
+      from {
+        opacity: 0;
+        transform: rotate(var(--mark-angle)) skewX(var(--mark-skew)) scaleX(0);
+      }
+      to {
+        opacity: var(--mark-opacity);
+        transform: rotate(var(--mark-angle)) skewX(var(--mark-skew)) scaleX(1);
+      }
+    }
+
+    @keyframes marker-line-sweep {
+      from {
+        opacity: 0;
+        transform: rotate(var(--line-angle)) skewX(var(--line-skew)) scaleX(0);
+      }
+      to {
+        opacity: var(--line-opacity);
+        transform: rotate(var(--line-angle)) skewX(var(--line-skew)) scaleX(1);
+      }
+    }
+
+    .question.is-entering {
+      animation: card-enter 760ms var(--spring-apple) both;
+      animation-delay: var(--enter-delay, 0ms);
+    }
+
+    @media (orientation: portrait) {
+      body::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        z-index: 20;
+        pointer-events: none;
+        background: rgba(11, 11, 13, 0.5);
+        -webkit-backdrop-filter: blur(14px);
+        backdrop-filter: blur(14px);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 1ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 1ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="camera" id="camera" aria-hidden="true">
+    <video id="video" autoplay muted playsinline webkit-playsinline></video>
+  </div>
+  <div class="veil" aria-hidden="true"></div>
+
+  <main class="stage" id="stage" aria-live="polite"></main>
+  <section class="focus-card" id="focusCard" hidden tabindex="-1" aria-live="polite">
+    <div class="focus-question" id="focusQuestion"></div>
+    <div class="answer-rule" aria-hidden="true"></div>
+    <div class="focus-answer" id="focusAnswer" aria-hidden="true"></div>
+  </section>
+
+  <script>
+    (() => {
+      "use strict";
+
+      const questions = [
+        {
+          id: "multiple-traits",
+          question: "倍數的特質好似____表一樣，數值會越來越大。",
+          answer: "乘數",
+          mode: "blank",
+          blankWidth: "2.5em",
+          accent: "#1769ff",
+          accent2: "#48e0c2",
+          highlights: ["倍數的特質", "越來越大"]
+        },
+        {
+          id: "largest-multiple",
+          question: "倍數有沒有最大的？",
+          answer: "沒有。",
+          mode: "direct",
+          accent: "#ff6a3d",
+          accent2: "#ffcf37",
+          highlights: ["最大的"]
+        },
+        {
+          id: "infinite-common-multiples",
+          question: "公倍數是無限多的。對？不對？",
+          answer: "對",
+          mode: "choice",
+          accent: "#ff546f",
+          accent2: "#d8ff42",
+          highlights: ["無限多"]
+        },
+        {
+          id: "first-meeting",
+          question: "最小公倍數是兩個數第幾次「見面」？\n（例如：12，30）",
+          answer: "第一次。",
+          mode: "meeting",
+          accent: "#9b5cff",
+          accent2: "#ff72bf",
+          highlights: ["第幾次", "見面"]
+        },
+        {
+          id: "largest-common-multiple",
+          question: "有否最大公倍數？",
+          answer: "沒有（因為公倍數有無限多個/無限增大）。",
+          mode: "layers",
+          accent: "#ff7b3d",
+          accent2: "#4bbdff",
+          highlights: ["最大公倍數"]
+        },
+        {
+          id: "listing-method",
+          question: "昨天教了____法，找出兩個數的最小公倍數。",
+          answer: "列舉",
+          mode: "blank",
+          blankWidth: "2.5em",
+          accent: "#13a56a",
+          accent2: "#49cfff",
+          highlights: ["最小公倍數"]
+        },
+        {
+          id: "lcm-abbreviation",
+          question: "最小公倍數的英文縮寫是____。",
+          answer: "L.C.M.",
+          mode: "blank",
+          blankWidth: "3.4em",
+          accent: "#f04f9d",
+          accent2: "#8f68ff",
+          highlights: ["英文縮寫"]
+        }
+      ];
+
+      const stage = document.getElementById("stage");
+      const focusCard = document.getElementById("focusCard");
+      const focusQuestion = document.getElementById("focusQuestion");
+      const focusAnswer = document.getElementById("focusAnswer");
+      const camera = document.getElementById("camera");
+      const video = document.getElementById("video");
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+
+      let state = "grid";
+      let currentIndex = -1;
+      let answered = new Set();
+      let transitionLocked = false;
+      let stream = null;
+      let cameraRequest = null;
+      let layoutFrame = 0;
+
+      function motionDuration(duration) {
+        return reducedMotion.matches ? 0 : duration;
+      }
+
+      function rgba(hex, alpha) {
+        const value = hex.replace("#", "");
+        const red = parseInt(value.slice(0, 2), 16);
+        const green = parseInt(value.slice(2, 4), 16);
+        const blue = parseInt(value.slice(4, 6), 16);
+        return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+      }
+
+      function applyPalette(element, item) {
+        element.style.setProperty("--accent", item.accent);
+        element.style.setProperty("--accent-2", item.accent2);
+        element.style.setProperty("--accent-soft", rgba(item.accent, 0.21));
+        element.style.setProperty("--accent-soft-2", rgba(item.accent2, 0.18));
+        element.style.setProperty("--card-wash", rgba(item.accent, 0.17));
+        element.style.setProperty("--card-wash-2", rgba(item.accent2, 0.13));
+      }
+
+      function createElement(tagName, className, text) {
+        const element = document.createElement(tagName);
+        if (className) element.className = className;
+        if (text !== undefined) element.textContent = text;
+        return element;
+      }
+
+      function appendHighlightedText(container, text, highlights = []) {
+        let remaining = text;
+        let highlightIndex = 0;
+
+        while (remaining.length) {
+          let nextMatch = null;
+          highlights.forEach((term) => {
+            const index = remaining.indexOf(term);
+            if (
+              term &&
+              index !== -1 &&
+              (!nextMatch || index < nextMatch.index || (index === nextMatch.index && term.length > nextMatch.term.length))
+            ) {
+              nextMatch = { term, index };
+            }
+          });
+
+          if (!nextMatch) {
+            container.append(document.createTextNode(remaining));
+            break;
+          }
+
+          if (nextMatch.index > 0) {
+            container.append(document.createTextNode(remaining.slice(0, nextMatch.index)));
+          }
+
+          const mark = createElement(
+            "span",
+            `hand-highlight${highlightIndex % 2 ? " highlight-b" : ""}`,
+            nextMatch.term
+          );
+          container.append(mark);
+          remaining = remaining.slice(nextMatch.index + nextMatch.term.length);
+          highlightIndex += 1;
+        }
+      }
+
+      function createChoiceMark() {
+        const namespace = "http://www.w3.org/2000/svg";
+        const svg = document.createElementNS(namespace, "svg");
+        const under = document.createElementNS(namespace, "path");
+        const top = document.createElementNS(namespace, "path");
+
+        svg.classList.add("choice-mark");
+        svg.setAttribute("viewBox", "0 0 120 90");
+        svg.setAttribute("aria-hidden", "true");
+
+        under.classList.add("choice-mark-under");
+        under.setAttribute("pathLength", "1");
+        under.setAttribute(
+          "d",
+          "M 16 48 C 13 23 36 9 64 10 C 96 11 107 31 102 52 C 97 75 68 84 40 80 C 17 77 8 59 16 40"
+        );
+
+        top.setAttribute("pathLength", "1");
+        top.setAttribute(
+          "d",
+          "M 13 51 C 8 24 35 6 67 8 C 101 10 114 33 105 56 C 96 80 61 88 34 78 C 12 70 9 48 21 31"
+        );
+
+        svg.append(under, top);
+        return svg;
+      }
+
+      function renderFocusQuestion(item) {
+        focusQuestion.replaceChildren();
+        focusQuestion.className = "focus-question";
+        focusQuestion.setAttribute("aria-label", item.question.replace(/\n/g, " "));
+
+        if (item.mode === "blank") {
+          const parts = item.question.split("____");
+          const blank = createElement("span", "inline-blank");
+          const answer = createElement("span", "inline-answer", item.answer);
+
+          blank.style.setProperty("--blank-width", item.blankWidth);
+          answer.setAttribute("aria-hidden", "true");
+          blank.append(answer);
+          focusQuestion.classList.add("has-inline-blank");
+          appendHighlightedText(focusQuestion, parts[0], item.highlights);
+          focusQuestion.append(blank);
+          if (parts.length > 1) {
+            appendHighlightedText(focusQuestion, parts.slice(1).join("____"), item.highlights);
+          }
+          return;
+        }
+
+        if (item.mode === "choice") {
+          const marker = "對？不對？";
+          const markerIndex = item.question.indexOf(marker);
+          if (markerIndex !== -1) {
+            const yes = createElement("span", "choice-token is-answer", "對");
+            const no = createElement("span", "choice-token", "不對");
+
+            yes.append(createChoiceMark());
+            focusQuestion.classList.add("has-choice-mark");
+            appendHighlightedText(
+              focusQuestion,
+              item.question.slice(0, markerIndex),
+              item.highlights
+            );
+            focusQuestion.append(yes, document.createTextNode("？"), no, document.createTextNode("？"));
+            return;
+          }
+        }
+
+        appendHighlightedText(focusQuestion, item.question, item.highlights);
+      }
+
+      function renderFocusAnswer(item) {
+        focusAnswer.replaceChildren();
+        focusAnswer.setAttribute("aria-label", item.answer);
+
+        if (item.mode === "blank" || item.mode === "choice") return;
+
+        if (item.mode === "direct") {
+          const wrapper = createElement("div", "answer-direct");
+          const headline = createElement("span", "answer-headline", item.answer);
+          const scribble = createElement("span", "answer-scribble");
+
+          scribble.setAttribute("aria-hidden", "true");
+          headline.append(scribble);
+          wrapper.append(headline);
+          focusAnswer.append(wrapper);
+          return;
+        }
+
+        if (item.mode === "meeting") {
+          const wrapper = createElement("div", "answer-meeting");
+          const orbit = createElement("div", "meeting-orbit");
+          const result = createElement("strong", "meeting-result", item.answer);
+          const numbers = item.question.match(/\d+/g) || ["12", "30"];
+
+          orbit.setAttribute("aria-hidden", "true");
+          orbit.append(
+            createElement("span", "meeting-number", numbers[0]),
+            createElement("span", "meeting-number", numbers[1] || "30")
+          );
+          wrapper.append(orbit, result);
+          focusAnswer.append(wrapper);
+          return;
+        }
+
+        if (item.mode === "layers") {
+          const wrapper = createElement("div", "layered-answer");
+          const main = createElement("strong", "layer-main", "沒有");
+          const stack = createElement("div", "reason-stack");
+          const label = createElement("span", "reason-label", "因為");
+          const firstReason = createElement(
+            "span",
+            "reason-card reason-one",
+            "公倍數有無限多個"
+          );
+          const secondReason = createElement("span", "reason-card reason-two", "無限增大");
+
+          stack.append(label, firstReason, secondReason);
+          wrapper.append(main, stack);
+          focusAnswer.append(wrapper);
+        }
+      }
+
+      function startCamera() {
+        if (stream || cameraRequest || !navigator.mediaDevices?.getUserMedia) {
+          return Promise.resolve();
+        }
+
+        cameraRequest = navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            facingMode: { ideal: "user" },
+            width: { ideal: 1920 },
+            height: { ideal: 1440 }
+          }
+        }).then((mediaStream) => {
+          stream = mediaStream;
+          video.srcObject = mediaStream;
+          camera.classList.add("is-live");
+          return video.play().catch(() => {});
+        }).catch(() => {
+          camera.classList.remove("is-live");
+        }).finally(() => {
+          cameraRequest = null;
+        });
+
+        return cameraRequest;
+      }
+
+      function stopCamera() {
+        if (!stream) return;
+        stream.getTracks().forEach((track) => track.stop());
+        stream = null;
+        video.srcObject = null;
+        camera.classList.remove("is-live");
+      }
+
+      function columnsForCount(count) {
+        if (count <= 1) return 1;
+        if (count === 2) return 2;
+        return 3;
+      }
+
+      function gridSpanFor(index, count, columns) {
+        const fullRows = Math.floor(count / columns);
+        const remainder = count % columns;
+        const startOfLastRow = fullRows * columns;
+
+        if (remainder && index >= startOfLastRow) {
+          return 12 / remainder;
+        }
+        return 12 / columns;
+      }
+
+      function setQuestionFontSize(
+        element,
+        availableWidth,
+        availableHeight,
+        maxSize,
+        minSize,
+        measureElement = element
+      ) {
+        const text = measureElement.textContent || "";
+        const characterBias = text.length > 25 ? 0.82 : text.length > 18 ? 0.92 : 1;
+        const heightCap = availableHeight * (text.includes("\n") ? 0.34 : 0.46);
+        const widthCap = availableWidth * (text.includes("\n") ? 0.115 : 0.135);
+        let size = Math.max(minSize, Math.floor(Math.min(maxSize, heightCap, widthCap) * characterBias));
+
+        element.style.fontSize = `${size}px`;
+        const fits = () =>
+          measureElement.scrollWidth <= availableWidth + 1 &&
+          measureElement.scrollHeight <= availableHeight + 1;
+
+        while (!fits() && size > minSize) {
+          size -= 1;
+          element.style.fontSize = `${size}px`;
+        }
+      }
+
+      function fitGridQuestions() {
+        stage.querySelectorAll(".question").forEach((button) => {
+          const text = button.querySelector(".question-text");
+          const copy = button.querySelector(".question-copy");
+          const style = getComputedStyle(button);
+          const horizontalPadding = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight);
+          const verticalPadding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
+          const width = Math.max(1, button.clientWidth - horizontalPadding);
+          const height = Math.max(1, button.clientHeight - verticalPadding);
+          text.style.height = `${height}px`;
+          setQuestionFontSize(text, width, height, 48, 13, copy);
+        });
+      }
+
+      function fitFocusQuestion() {
+        const item = questions[currentIndex];
+        const keepsFullSize = item && (item.mode === "blank" || item.mode === "choice");
+        const style = getComputedStyle(focusCard);
+        const width = Math.max(
+          1,
+          focusCard.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight)
+        );
+        const height = Math.max(
+          1,
+          focusCard.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom)
+        );
+        const availableHeight = state === "answer" && !keepsFullSize ? height * 0.29 : height;
+        const maxSize = state === "answer" && !keepsFullSize ? 38 : 68;
+        setQuestionFontSize(focusQuestion, width, availableHeight, maxSize, 17);
+      }
+
+      function fitFocusAnswer() {
+        const item = questions[currentIndex];
+        const headline = focusAnswer.querySelector(".answer-headline");
+        if (!item || item.mode !== "direct" || !headline) return;
+
+        const width = Math.max(1, focusAnswer.clientWidth);
+        const height = Math.max(1, focusAnswer.clientHeight);
+        let size = Math.max(20, Math.min(96, Math.floor(Math.min(height * 0.64, width * 0.22))));
+
+        headline.style.fontSize = `${size}px`;
+        while (
+          size > 20 &&
+          (headline.getBoundingClientRect().width > width + 1 ||
+            headline.getBoundingClientRect().height > height + 1)
+        ) {
+          size -= 1;
+          headline.style.fontSize = `${size}px`;
+        }
+      }
+
+      function scheduleLayout() {
+        cancelAnimationFrame(layoutFrame);
+        layoutFrame = requestAnimationFrame(() => {
+          fitGridQuestions();
+          if (state !== "grid") {
+            fitFocusQuestion();
+            if (state === "answer") fitFocusAnswer();
+          }
+        });
+      }
+
+      function createGrid() {
+        stage.innerHTML = "";
+        const visible = questions.filter((question) => !answered.has(question.id));
+        const columns = columnsForCount(visible.length);
+        const rows = Math.max(1, Math.ceil(visible.length / columns));
+
+        stage.style.setProperty("--rows", String(rows));
+        stage.style.gridTemplateColumns = "repeat(12, minmax(0, 1fr))";
+        stage.style.gridTemplateRows = `repeat(${rows}, minmax(0, 1fr))`;
+
+        visible.forEach((item, index) => {
+          const sourceIndex = questions.findIndex((question) => question.id === item.id);
+          const button = document.createElement("button");
+          const text = document.createElement("span");
+          const copy = document.createElement("span");
+          const span = gridSpanFor(index, visible.length, columns);
+
+          button.type = "button";
+          button.className = "question is-entering";
+          button.dataset.index = String(sourceIndex);
+          button.style.gridColumn = `span ${span}`;
+          button.style.setProperty("--enter-delay", `${Math.min(index * 46, 260)}ms`);
+          button.setAttribute("aria-label", item.question.replace(/\n/g, " "));
+          applyPalette(button, item);
+
+          text.className = "question-text";
+          copy.className = "question-copy";
+          appendHighlightedText(copy, item.question, item.highlights);
+          text.append(copy);
+          button.append(text);
+          button.addEventListener("click", (event) => {
+            event.stopPropagation();
+            selectQuestion(button, sourceIndex);
+          });
+          stage.append(button);
+        });
+
+        if (!visible.length) {
+          state = "grid";
+          document.body.classList.add("is-complete");
+          document.body.classList.remove("is-focused");
+        } else {
+          document.body.classList.remove("is-complete");
+        }
+
+        scheduleLayout();
+        window.setTimeout(() => {
+          stage.querySelectorAll(".is-entering").forEach((card) => card.classList.remove("is-entering"));
+        }, motionDuration(1100));
+      }
+
+      function selectQuestion(button, index) {
+        if (state !== "grid" || transitionLocked) return;
+
+        transitionLocked = true;
+        currentIndex = index;
+        state = "question";
+        const bounds = button.getBoundingClientRect();
+        const item = questions[index];
+
+        renderFocusQuestion(item);
+        renderFocusAnswer(item);
+        focusAnswer.setAttribute("aria-hidden", "true");
+        focusCard.classList.remove(
+          "is-answering",
+          "is-leaving",
+          "answer-blank",
+          "answer-choice",
+          "answer-direct",
+          "answer-meeting",
+          "answer-layers"
+        );
+        focusCard.classList.add(`answer-${item.mode}`);
+        applyPalette(focusCard, item);
+        focusCard.style.setProperty("--focus-left", `${bounds.left}px`);
+        focusCard.style.setProperty("--focus-top", `${bounds.top}px`);
+        focusCard.style.setProperty("--focus-width", `${bounds.width}px`);
+        focusCard.style.setProperty("--focus-height", `${bounds.height}px`);
+        focusCard.style.removeProperty("--focus-question-size");
+        focusCard.style.removeProperty("--focus-question-answered-size");
+        focusCard.style.removeProperty("--answer-size");
+        focusCard.hidden = false;
+        focusCard.focus({ preventScroll: true });
+        button.classList.add("is-selected");
+        stage.classList.add("is-expanded");
+        document.body.classList.add("is-focused");
+
+        requestAnimationFrame(() => {
+          fitFocusQuestion();
+          const insetX = Math.max(24, parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--grid-gap")) || 16);
+          const targetWidth = Math.min(window.innerWidth - insetX * 2, window.innerHeight * 1.46);
+          const targetHeight = Math.min(window.innerHeight - insetX * 2, targetWidth * 0.64);
+          const left = (window.innerWidth - targetWidth) / 2;
+          const top = (window.innerHeight - targetHeight) / 2;
+
+          focusCard.style.setProperty("--focus-left", `${left}px`);
+          focusCard.style.setProperty("--focus-top", `${top}px`);
+          focusCard.style.setProperty("--focus-width", `${targetWidth}px`);
+          focusCard.style.setProperty("--focus-height", `${targetHeight}px`);
+          focusCard.style.transition =
+            `left 720ms var(--spring-apple), top 720ms var(--spring-apple), ` +
+            `width 720ms var(--spring-apple), height 720ms var(--spring-apple), ` +
+            `border-radius 720ms var(--spring-apple)`;
+
+          window.setTimeout(() => {
+            focusCard.style.transition = "";
+            fitFocusQuestion();
+            transitionLocked = false;
+          }, motionDuration(740));
+        });
+      }
+
+      function revealAnswer() {
+        if (state !== "question" || transitionLocked) return;
+
+        transitionLocked = true;
+        state = "answer";
+        focusCard.classList.add("is-answering");
+        focusAnswer.setAttribute("aria-hidden", "false");
+        const item = questions[currentIndex];
+        if (item && (item.mode === "blank" || item.mode === "choice")) {
+          focusQuestion.setAttribute(
+            "aria-label",
+            `${item.question.replace(/\n/g, " ")} ${item.answer}`
+          );
+        }
+
+        requestAnimationFrame(() => {
+          fitFocusQuestion();
+          fitFocusAnswer();
+          window.setTimeout(() => {
+            transitionLocked = false;
+          }, motionDuration(560));
+        });
+      }
+
+      function returnToGrid() {
+        if (state !== "answer" || transitionLocked) return;
+
+        transitionLocked = true;
+        state = "grid";
+        const selectedButton = stage.querySelector(".question.is-selected");
+        const item = questions[currentIndex];
+
+        answered.add(item.id);
+        focusCard.classList.remove("is-answering");
+        focusCard.classList.add("is-leaving");
+        focusAnswer.setAttribute("aria-hidden", "true");
+        selectedButton?.classList.add("is-selected");
+        stage.classList.remove("is-expanded");
+        document.body.classList.remove("is-focused");
+
+        window.setTimeout(() => {
+          focusCard.hidden = true;
+          focusCard.classList.remove("is-leaving");
+          focusQuestion.replaceChildren();
+          focusAnswer.replaceChildren();
+          currentIndex = -1;
+          createGrid();
+          window.setTimeout(() => {
+            fitGridQuestions();
+            transitionLocked = false;
+          }, motionDuration(80));
+        }, motionDuration(430));
+      }
+
+      function advanceState() {
+        if (transitionLocked) return;
+        if (state === "question") revealAnswer();
+        else if (state === "answer") returnToGrid();
+      }
+
+      stage.addEventListener("click", advanceState);
+      focusCard.addEventListener("click", (event) => {
+        event.stopPropagation();
+        advanceState();
+      });
+      document.addEventListener("click", (event) => {
+        if (state === "grid" && !event.target.closest(".question")) {
+          advanceState();
+        }
+      });
+
+      document.addEventListener("pointerdown", () => {
+        if (!stream) startCamera();
+      }, { passive: true });
+      document.addEventListener("keydown", (event) => {
+        if (event.target.closest(".question")) return;
+        if (event.key === " " || event.key === "Enter") {
+          event.preventDefault();
+          advanceState();
+        }
+      });
+
+      window.addEventListener("resize", scheduleLayout, { passive: true });
+      window.addEventListener("orientationchange", () => {
+        window.setTimeout(scheduleLayout, 160);
+      }, { passive: true });
+      window.visualViewport?.addEventListener("resize", scheduleLayout, { passive: true });
+      window.addEventListener("pagehide", stopCamera, { once: true });
+
+      startCamera();
+      createGrid();
+    })();
+  </script>
+</body>
+</html>
