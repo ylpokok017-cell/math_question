@@ -384,7 +384,6 @@
       letter-spacing: -0.045em;
       text-shadow: 0 1px 0 rgba(255, 255, 255, 0.42), 0 0 20px rgba(255, 255, 255, 0.14);
       transition:
-        font-size 700ms var(--ease-apple),
         opacity 500ms var(--ease-apple),
         transform 700ms var(--spring-apple);
       transform-origin: left top;
@@ -431,41 +430,54 @@
         transform 780ms var(--spring-apple);
     }
 
-    .focus-card.is-answering {
+    .focus-card.focus-mode-direct,
+    .focus-card.focus-mode-meeting,
+    .focus-card.focus-mode-layers {
       justify-content: stretch;
     }
 
-    .focus-card.is-answering .focus-question {
+    .focus-card.focus-mode-direct .focus-question,
+    .focus-card.focus-mode-meeting .focus-question,
+    .focus-card.focus-mode-layers .focus-question {
       flex: 0 0 auto;
       max-height: 29%;
-      color: var(--muted-ink);
-      font-size: var(--focus-question-answered-size, 28px);
+      color: var(--ink);
       font-weight: 560;
       line-height: 1.15;
       letter-spacing: -0.025em;
     }
 
-    .focus-card.is-answering .answer-rule {
+    .focus-card.focus-mode-direct .answer-rule,
+    .focus-card.focus-mode-meeting .answer-rule,
+    .focus-card.focus-mode-layers .answer-rule {
       flex: 0 0 1px;
-      transform: scaleX(1);
     }
 
-    .focus-card.is-answering .focus-answer {
+    .focus-card.focus-mode-direct .focus-answer,
+    .focus-card.focus-mode-meeting .focus-answer,
+    .focus-card.focus-mode-layers .focus-answer {
       display: flex;
       flex: 1 1 auto;
       align-items: center;
       min-height: 0;
+    }
+
+    .focus-card.is-answering .answer-rule {
+      transform: scaleX(1);
+    }
+
+    .focus-card.is-answering .focus-answer {
       opacity: 1;
       transform: translateY(0) scale(1);
     }
 
-    .focus-card.focus-mode-blank.is-answering,
-    .focus-card.focus-mode-choice.is-answering {
+    .focus-card.focus-mode-blank,
+    .focus-card.focus-mode-choice {
       justify-content: center;
     }
 
-    .focus-card.focus-mode-blank.is-answering .focus-question,
-    .focus-card.focus-mode-choice.is-answering .focus-question {
+    .focus-card.focus-mode-blank .focus-question,
+    .focus-card.focus-mode-choice .focus-question {
       max-height: none;
       color: var(--ink);
       font-weight: 650;
@@ -473,11 +485,59 @@
       letter-spacing: -0.045em;
     }
 
-    .focus-card.focus-mode-blank.is-answering .answer-rule,
-    .focus-card.focus-mode-choice.is-answering .answer-rule,
-    .focus-card.focus-mode-blank.is-answering .focus-answer,
-    .focus-card.focus-mode-choice.is-answering .focus-answer {
+    .focus-card.focus-mode-blank .answer-rule,
+    .focus-card.focus-mode-choice .answer-rule,
+    .focus-card.focus-mode-blank .focus-answer,
+    .focus-card.focus-mode-choice .focus-answer {
       display: none;
+    }
+
+    .focus-note {
+      position: absolute;
+      z-index: 2;
+      left: clamp(26px, 4.4vw, 66px);
+      right: clamp(26px, 4.4vw, 66px);
+      bottom: clamp(28px, 4.2vw, 58px);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      justify-content: center;
+      gap: 0.55em;
+      color: var(--ink);
+      font-size: clamp(20px, 2.45vw, 34px);
+      font-weight: 580;
+      line-height: 1.16;
+      letter-spacing: -0.03em;
+      text-align: center;
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(14px) scale(0.98);
+      transition:
+        opacity 520ms var(--ease-apple),
+        transform 760ms var(--spring-apple);
+    }
+
+    .focus-note:empty {
+      display: none;
+    }
+
+    .focus-note-abbr {
+      color: var(--accent);
+      font-weight: 760;
+    }
+
+    .focus-note-equals {
+      color: var(--muted-ink);
+      font-weight: 520;
+    }
+
+    .focus-note-full {
+      font-weight: 620;
+    }
+
+    .focus-card.is-answering .focus-note {
+      opacity: 1;
+      transform: translateY(0) scale(1);
     }
 
     .inline-blank {
@@ -658,9 +718,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: clamp(78px, 13vw, 178px);
-      width: min(64%, 680px);
-      height: clamp(92px, 14vw, 154px);
+      gap: clamp(18px, 3.2vw, 48px);
+      width: min(88%, 860px);
+      height: clamp(138px, 18vw, 198px);
     }
 
     .meeting-orbit::before {
@@ -714,6 +774,53 @@
     .meeting-number:last-child {
       transform: translateX(58px) scale(0.72);
       box-shadow: 0 0 0 16px var(--accent-soft-2), 0 14px 35px rgba(0, 0, 0, 0.13);
+    }
+
+    .meeting-center {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex: 0 0 auto;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: clamp(126px, 16vw, 184px);
+      aspect-ratio: 1;
+      border: 1px solid rgba(255, 255, 255, 0.84);
+      border-radius: 46% 54% 48% 52%;
+      background:
+        radial-gradient(circle at 35% 25%, rgba(255, 255, 255, 0.72), transparent 42%),
+        linear-gradient(145deg, var(--accent-soft), var(--glass-strong) 78%);
+      box-shadow:
+        0 0 0 14px var(--accent-soft-2),
+        0 20px 44px rgba(0, 0, 0, 0.15);
+      opacity: 0;
+      transform: rotate(-4deg) scale(0.54);
+      transition:
+        transform 820ms 110ms var(--spring-apple),
+        opacity 480ms 90ms var(--ease-apple);
+    }
+
+    .meeting-lcm {
+      color: var(--ink);
+      font-size: clamp(50px, 7vw, 92px);
+      font-weight: 780;
+      line-height: 0.86;
+      letter-spacing: -0.07em;
+    }
+
+    .meeting-lcm-caption {
+      margin-top: 0.45em;
+      color: rgba(29, 29, 31, 0.62);
+      font-size: clamp(13px, 1.5vw, 19px);
+      font-weight: 620;
+      line-height: 1;
+      letter-spacing: 0.02em;
+    }
+
+    .is-answering .meeting-center {
+      opacity: 1;
+      transform: rotate(0) scale(1);
     }
 
     .is-answering .meeting-number {
@@ -960,6 +1067,7 @@
     <div class="focus-question" id="focusQuestion"></div>
     <div class="answer-rule" aria-hidden="true"></div>
     <div class="focus-answer" id="focusAnswer" aria-hidden="true"></div>
+    <div class="focus-note" id="focusNote" aria-hidden="true"></div>
   </section>
 
   <script>
@@ -1029,6 +1137,7 @@
           answer: "L.C.M.",
           mode: "blank",
           blankWidth: "3.4em",
+          note: "Least Common Multiple",
           accent: "#f04f9d",
           accent2: "#8f68ff",
           highlights: ["英文縮寫"]
@@ -1039,6 +1148,7 @@
       const focusCard = document.getElementById("focusCard");
       const focusQuestion = document.getElementById("focusQuestion");
       const focusAnswer = document.getElementById("focusAnswer");
+      const focusNote = document.getElementById("focusNote");
       const camera = document.getElementById("camera");
       const video = document.getElementById("video");
       const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -1210,14 +1320,35 @@
           const orbit = createElement("div", "meeting-orbit");
           const result = createElement("strong", "meeting-result", item.answer);
           const numbers = item.question.match(/\d+/g) || ["12", "30"];
+          const firstNumber = Number(numbers[0]);
+          const secondNumber = Number(numbers[1] || "30");
+          const gcd = (a, b) => {
+            while (b) [a, b] = [b, a % b];
+            return a;
+          };
+          const commonMultiple =
+            (firstNumber * secondNumber) / gcd(firstNumber, secondNumber);
+          const center = createElement("span", "meeting-center");
+          const commonValue = createElement("strong", "meeting-lcm", String(commonMultiple));
+          const commonCaption = createElement(
+            "span",
+            "meeting-lcm-caption",
+            "最小公倍數"
+          );
 
           orbit.setAttribute("aria-hidden", "true");
           orbit.append(
             createElement("span", "meeting-number", numbers[0]),
+            center,
             createElement("span", "meeting-number", numbers[1] || "30")
           );
+          center.append(commonValue, commonCaption);
           wrapper.append(orbit, result);
           focusAnswer.append(wrapper);
+          focusAnswer.setAttribute(
+            "aria-label",
+            `${item.answer} 最小公倍數是 ${commonMultiple}`
+          );
           return;
         }
 
@@ -1231,12 +1362,27 @@
             "reason-card reason-one",
             "公倍數有無限多個"
           );
-          const secondReason = createElement("span", "reason-card reason-two", "無限增大");
+          const secondReason = createElement(
+            "span",
+            "reason-card reason-two",
+            "公倍數會無限增大"
+          );
 
           stack.append(label, firstReason, secondReason);
           wrapper.append(main, stack);
           focusAnswer.append(wrapper);
         }
+      }
+
+      function renderFocusNote(item) {
+        focusNote.replaceChildren();
+        if (!item.note) return;
+
+        focusNote.append(
+          createElement("span", "focus-note-abbr", "L.C.M."),
+          createElement("span", "focus-note-equals", "="),
+          createElement("span", "focus-note-full", item.note)
+        );
       }
 
       function startCamera() {
@@ -1342,8 +1488,8 @@
           1,
           focusCard.clientHeight - parseFloat(style.paddingTop) - parseFloat(style.paddingBottom)
         );
-        const availableHeight = state === "answer" && !keepsFullSize ? height * 0.29 : height;
-        const maxSize = state === "answer" && !keepsFullSize ? 38 : 68;
+        const availableHeight = keepsFullSize ? height : height * 0.29;
+        const maxSize = keepsFullSize ? 68 : 48;
         setQuestionFontSize(focusQuestion, width, availableHeight, maxSize, 17);
       }
 
@@ -1440,10 +1586,13 @@
 
         renderFocusQuestion(item);
         renderFocusAnswer(item);
+        renderFocusNote(item);
         focusAnswer.setAttribute("aria-hidden", "true");
+        focusNote.setAttribute("aria-hidden", "true");
         focusCard.classList.remove(
           "is-answering",
           "is-leaving",
+          "has-answer-note",
           "focus-mode-blank",
           "focus-mode-choice",
           "focus-mode-direct",
@@ -1451,6 +1600,7 @@
           "focus-mode-layers"
         );
         focusCard.classList.add(`focus-mode-${item.mode}`);
+        focusCard.classList.toggle("has-answer-note", Boolean(item.note));
         applyPalette(focusCard, item);
 
         const inset = 24;
@@ -1474,13 +1624,13 @@
           `translate3d(${bounds.left - targetLeft}px, ${bounds.top - targetTop}px, 0) ` +
           `scale(${scaleX}, ${scaleY})`;
         focusCard.hidden = false;
+        fitFocusQuestion();
         focusCard.focus({ preventScroll: true });
         button.classList.add("is-selected");
         stage.classList.add("is-expanded");
         document.body.classList.add("is-focused");
 
         requestAnimationFrame(() => {
-          fitFocusQuestion();
           requestAnimationFrame(() => {
             focusCard.style.transition = "transform 720ms var(--spring-apple)";
             focusCard.style.transform = "translate3d(0, 0, 0) scale(1, 1)";
@@ -1503,11 +1653,13 @@
         state = "answer";
         focusCard.classList.add("is-answering");
         focusAnswer.setAttribute("aria-hidden", "false");
+        focusNote.setAttribute("aria-hidden", "false");
         const item = questions[currentIndex];
         if (item && (item.mode === "blank" || item.mode === "choice")) {
+          const answerText = item.note ? `${item.answer} ${item.note}` : item.answer;
           focusQuestion.setAttribute(
             "aria-label",
-            `${item.question.replace(/\n/g, " ")} ${item.answer}`
+            `${item.question.replace(/\n/g, " ")} ${answerText}`
           );
         }
 
@@ -1532,6 +1684,7 @@
         focusCard.classList.remove("is-answering");
         focusCard.classList.add("is-leaving");
         focusAnswer.setAttribute("aria-hidden", "true");
+        focusNote.setAttribute("aria-hidden", "true");
         selectedButton?.classList.add("is-selected");
         stage.classList.remove("is-expanded");
         document.body.classList.remove("is-focused");
@@ -1541,6 +1694,7 @@
           focusCard.classList.remove("is-leaving");
           focusQuestion.replaceChildren();
           focusAnswer.replaceChildren();
+          focusNote.replaceChildren();
           currentIndex = -1;
           createGrid();
           window.setTimeout(() => {
